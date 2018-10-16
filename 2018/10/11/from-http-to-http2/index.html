@@ -8,13 +8,13 @@
   <link rel="dns-prefetch" href="https://kingsunday.github.io">
   <title>HTTP2 的前世今生 | MrSunday&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客之旅，希望借此积累一些经验和技术。如有不足，请多指教。 作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP">
-<meta name="keywords" content="HTTP,HTTP2">
+  <meta name="description" content="作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP/1.1 的主要区别，以及 HTTP2 相关的新特性。 听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客">
+<meta name="keywords" content="HTTP,HTTP2,HOL blocking">
 <meta property="og:type" content="article">
 <meta property="og:title" content="HTTP2 的前世今生">
 <meta property="og:url" content="https://kingsunday.github.io/2018/10/11/from-http-to-http2/index.html">
 <meta property="og:site_name" content="MrSunday&#39;s Blog">
-<meta property="og:description" content="听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客之旅，希望借此积累一些经验和技术。如有不足，请多指教。 作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP">
+<meta property="og:description" content="作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP/1.1 的主要区别，以及 HTTP2 相关的新特性。 听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://kingsunday.github.io/assets/images/http-message-composition.png">
 <meta property="og:image" content="https://kingsunday.github.io/assets/images/http-method-introduction.png">
@@ -23,10 +23,10 @@
 <meta property="og:image" content="https://kingsunday.github.io/assets/images/http-tls-tcp-layer.png">
 <meta property="og:image" content="https://kingsunday.github.io/assets/images/https-tcp-tls-3rtt.png">
 <meta property="og:image" content="https://kingsunday.github.io/assets/images/http2-frame-2.png">
-<meta property="og:updated_time" content="2018-10-15T09:12:11.265Z">
+<meta property="og:updated_time" content="2018-10-16T03:31:45.631Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HTTP2 的前世今生">
-<meta name="twitter:description" content="听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客之旅，希望借此积累一些经验和技术。如有不足，请多指教。 作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP">
+<meta name="twitter:description" content="作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP/1.1 的主要区别，以及 HTTP2 相关的新特性。 听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客">
 <meta name="twitter:image" content="https://kingsunday.github.io/assets/images/http-message-composition.png">
   
     <link rel="alternative" href="/atom.xml" title="MrSunday&#39;s Blog" type="application/atom+xml">
@@ -183,8 +183,8 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客之旅，希望借此积累一些经验和技术。如有不足，请多指教。</p>
-<p>作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP/1.1 的主要区别，以及 HTTP2 相关的新特性。<br><a id="more"></a></p>
+        <p>作为一名 Web 后端开发工程师，无论是工作中，还是面试时，对于 HTTP 协议的理解都是必不可少的。而 HTTP2 协议的发布更是解决了 HTTP1.1 协议中一系列的问题。这篇文章是根据我在团队的一次技术分享改编而来，里面介绍了 HTTP/1.0 和 HTTP/1.1 的主要区别，以及 HTTP2 相关的新特性。</p>
+<p>听说写博客的程序员属于业界良心，而我因为贪玩和拖延，直到今天才开始自己的个人博客之旅，希望借此积累一些经验和技术。如有不足，请多指教。<br><a id="more"></a></p>
 <h3 id="HTTP-定义"><a href="#HTTP-定义" class="headerlink" title="HTTP 定义"></a>HTTP 定义</h3><p>超文本传输协议（HyperText Transfer Protocol，简称：HTTP）是一种用于分布式、协作式和超媒体信息系统的应用层协议。</p>
 <p>HTTP 报文由三部分组成：对报文进行描述的起始行（start line）、包含属性的首部（header）块、以及可选的、包含数据的主体（body）部分。</p>
 <p><img src="/assets/images/http-message-composition.png" alt="HTTP 报文组成"></p>
@@ -348,6 +348,10 @@
       		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">HTTP2</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">HOL blocking</a>
         		</li>
       		
 		</ul>
@@ -518,6 +522,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">HTTP2</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">HOL blocking</a>
               </li>
             
             <div class="clearfix"></div>
